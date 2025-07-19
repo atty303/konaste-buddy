@@ -1,0 +1,33 @@
+[tools]
+deno = "latest"
+node = "latest"
+hk = "latest"
+pkl = "latest"
+
+[tasks.install]
+run = [
+    "deno run -A npm:playwright install chromium",
+]
+
+[tasks.check]
+description = "Run all checks"
+run = [
+    "deno lint",
+    "deno fmt --check",
+    "deno check",
+]
+
+[tasks.build]
+description = "Build the CLI binary"
+run = [
+    "deno compile -A --target {{option(name='arch', default='x86_64-unknown-linux-gnu')}} -o dist/konaste-{{option(name='arch', default='x86_64-unknown-linux-gnu')}} src/main.ts",
+]
+
+[tasks.prepare-release]
+description = "Prepare for release"
+run = [
+    "deno install",
+    "echo '\"{{option(name='version') }}\"' > version.json",
+    "mise build --arch=x86_64-unknown-linux-gnu",
+    "mise build --arch=aarch64-unknown-linux-gnu",
+]
