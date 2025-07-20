@@ -4,18 +4,18 @@ node = "latest"
 hk = "latest"
 pkl = "latest"
 
-[tasks.install]
+[tasks.install-cli]
+description = "Install the CLI"
 run = [
-    "deno run -A npm:playwright install chromium",
+    "deno install -A --global --force --config deno.jsonc --name konaste-buddy --root {{option(name='root', default='~/.deno')}} src/main.ts",
 ]
+
+[tasks.install-browser]
+run = ["deno run -A npm:playwright install chromium"]
 
 [tasks.check]
 description = "Run all checks"
-run = [
-    "deno lint",
-    "deno fmt --check",
-    "deno check",
-]
+run = ["deno lint", "deno fmt --check", "deno check"]
 
 [tasks.build]
 description = "Build the CLI binary"
