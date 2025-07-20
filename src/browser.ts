@@ -3,12 +3,13 @@ import playwright from "patchright";
 import { Entry } from "@napi-rs/keyring";
 import $ from "@david/dax";
 
-import { program as playwrightCli } from "patchright/lib/program";
-
 const entry = new Entry("io.github.atty303.konaste-linux", "passkey-default");
 
-async function launchBrowser() {
-  const browser = await playwright.chromium.launch({ headless: false });
+async function launchBrowser(executablePath?: string) {
+  const browser = await playwright.chromium.launch({
+    headless: false,
+    executablePath: executablePath,
+  });
   const context = await browser.newContext();
   const page = await context.newPage();
   const cdp = await context.newCDPSession(page);
@@ -53,16 +54,6 @@ async function launchBrowser() {
   };
 }
 
-function installCommand() {
-  return new Command()
-    .description("Install the browser")
-    .action(async () => {
-      $.logStep("Installing browser...");
-      await playwrightCli.parse(["npx", "playwright", "install", "chromium"]);
-      $.log("Browser installed successfully.");
-    });
-}
-
 function importPasskeyCommand() {
   return new Command()
     .description("Import a passkey to the keyring")
@@ -96,13 +87,16 @@ function exportPasskeyCommand() {
 function registerCommand() {
   return new Command()
     .description("Register a passkey at visiting account page")
+    .option("--browser <exe:file>", "The browser executable to use", {
+      required: true,
+    })
     .option(
       "-s, --start-url <url:string>",
       "The URL to start the registration process",
       { required: true, default: "https://my.konami.net/" },
     )
     .action(async (options) => {
-      const b = await launchBrowser();
+      const b = await launchBrowser(options.browser);
       b.cdp.on("WebAuthn.credentialAdded", (payload) => {
         $.logStep(
           `Added credential: ${payload.credential.userDisplayName} (${payload.credential.credentialId})`,
@@ -126,13 +120,16 @@ function recordCommand() {
   return new Command()
     .description("Record a login flow for development purposes")
     .hidden()
+    .option("--browser <exe:file>", "The browser executable to use", {
+      required: true,
+    })
     .option(
       "-u, --url <url:string>",
       "The URL to visit for login",
       { required: true },
     )
     .action(async (options) => {
-      const b = await launchBrowser();
+      const b = await launchBrowser(options.browser);
       b.loadCredentials();
 
       await b.page.goto(options.url);
@@ -149,6 +146,9 @@ function recordCommand() {
 function launchCommand() {
   return new Command()
     .description("Perform a login and launch the game")
+    .option("--browser <exe:file>", "The browser executable to use", {
+      required: true,
+    })
     .option(
       "-u, --url <url:string>",
       "The URL to visit after launching the browser",
@@ -158,7 +158,7 @@ function launchCommand() {
       required: true,
     })
     .action(async (options) => {
-      const b = await launchBrowser();
+      const b = await launchBrowser(options.browser);
       await b.loadCredentials();
 
       await b.page.goto(options.url, { timeout: 30000 });
@@ -199,7 +199,6 @@ function launchCommand() {
 
 export const browserCommand = new Command()
   .description("Browser management commands")
-  .command("install", installCommand())
   .command("register-passkey", registerCommand())
   .command("import-passkey", importPasskeyCommand())
   .command("export-passkey", exportPasskeyCommand())
