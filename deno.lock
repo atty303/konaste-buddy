@@ -28,6 +28,7 @@
     "jsr:@std/text@~1.0.7": "1.0.15",
     "npm:@napi-rs/keyring@^1.1.8": "1.1.8",
     "npm:@types/node@*": "22.15.15",
+    "npm:obs-websocket-js@*": "5.0.6_ws@8.18.3",
     "npm:patchright@*": "1.52.5",
     "npm:patchright@^1.52.5": "1.52.5"
   },
@@ -139,6 +140,9 @@
     }
   },
   "npm": {
+    "@msgpack/msgpack@2.8.0": {
+      "integrity": "sha512-h9u4u/jiIRKbq25PM+zymTyW6bhTzELvOoUd+AvYriWOAKpLGnIamaET3pnHYoI5iYphAHBI4ayx0MehR+VVPQ=="
+    },
     "@napi-rs/keyring-darwin-arm64@1.1.8": {
       "integrity": "sha512-zaieCiY+gEl8kR7tJrKMfOMDHyUDfJYlGvAgWX4WZOnpvWZ5E+F+KGzm8TMQKkipiGRJgP6aCiQAB8m3dSl5kw==",
       "os": ["darwin"],
@@ -222,10 +226,43 @@
         "undici-types"
       ]
     },
+    "crypto-js@4.2.0": {
+      "integrity": "sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q=="
+    },
+    "debug@4.4.1": {
+      "integrity": "sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ==",
+      "dependencies": [
+        "ms"
+      ]
+    },
+    "eventemitter3@5.0.1": {
+      "integrity": "sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA=="
+    },
     "fsevents@2.3.2": {
       "integrity": "sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==",
       "os": ["darwin"],
       "scripts": true
+    },
+    "isomorphic-ws@5.0.0_ws@8.18.3": {
+      "integrity": "sha512-muId7Zzn9ywDsyXgTIafTry2sV3nySZeUDe6YedVd1Hvuuep5AsIlqK+XefWpYTyJG5e503F2xIuT2lcU6rCSw==",
+      "dependencies": [
+        "ws"
+      ]
+    },
+    "ms@2.1.3": {
+      "integrity": "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="
+    },
+    "obs-websocket-js@5.0.6_ws@8.18.3": {
+      "integrity": "sha512-tHRq8py1XrdlMhSV+N/KTGHqoRIcsBBXbjcA9ex21k128iQ7YXjxzNWs3s9gidP1tEcIyVuJu8FnPgrSBWGm0Q==",
+      "dependencies": [
+        "@msgpack/msgpack",
+        "crypto-js",
+        "debug",
+        "eventemitter3",
+        "isomorphic-ws",
+        "type-fest",
+        "ws"
+      ]
     },
     "patchright-core@1.52.5": {
       "integrity": "sha512-8rnLVEK9jDZWzFPy2hCQrp4xhU7zgE8IqseZyjGkgxf+jpAWTuGNgIAlcsKZMfQrDL8j1mZgRIGNAQT00nk6QA==",
@@ -241,8 +278,14 @@
       ],
       "bin": true
     },
+    "type-fest@3.13.1": {
+      "integrity": "sha512-tLq3bSNx+xSpwvAJnzrK0Ep5CLNWjvFTOp71URMaAEWBfRb9nnJiBoUe0tF8bI4ZFO3omgBR6NvnbzVUT3Ly4g=="
+    },
     "undici-types@6.21.0": {
       "integrity": "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ=="
+    },
+    "ws@8.18.3": {
+      "integrity": "sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg=="
     }
   },
   "workspace": {
