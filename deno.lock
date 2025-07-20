@@ -8,9 +8,11 @@
     "jsr:@cliffy/internal@1.0.0-rc.8": "1.0.0-rc.8",
     "jsr:@cliffy/table@1.0.0-rc.8": "1.0.0-rc.8",
     "jsr:@david/console-static-text@0.3": "0.3.0",
+    "jsr:@david/dax@*": "0.43.2",
     "jsr:@david/dax@~0.43.2": "0.43.2",
     "jsr:@david/path@0.2": "0.2.0",
     "jsr:@david/which@~0.4.1": "0.4.1",
+    "jsr:@std/async@*": "1.0.13",
     "jsr:@std/bytes@^1.0.5": "1.0.6",
     "jsr:@std/encoding@~1.0.5": "1.0.10",
     "jsr:@std/fmt@1": "1.0.8",
@@ -19,6 +21,7 @@
     "jsr:@std/internal@^1.0.9": "1.0.9",
     "jsr:@std/io@0.225": "0.225.2",
     "jsr:@std/io@~0.224.9": "0.224.9",
+    "jsr:@std/path@*": "1.1.1",
     "jsr:@std/path@1": "1.1.1",
     "jsr:@std/path@^1.0.8": "1.1.1",
     "jsr:@std/path@^1.1.1": "1.1.1",
@@ -93,6 +96,9 @@
     },
     "@david/which@0.4.1": {
       "integrity": "896a682b111f92ab866cc70c5b4afab2f5899d2f9bde31ed00203b9c250f225e"
+    },
+    "@std/async@1.0.13": {
+      "integrity": "1d76ca5d324aef249908f7f7fe0d39aaf53198e5420604a59ab5c035adc97c96"
     },
     "@std/bytes@1.0.6": {
       "integrity": "f6ac6adbd8ccd99314045f5703e23af0a68d7f7e58364b47d2c7f408aeb5820a"
@@ -247,11 +253,6 @@
       "jsr:@david/dax@~0.43.2",
       "npm:@napi-rs/keyring@^1.1.8",
       "npm:patchright@^1.52.5"
-    ],
-    "packageJson": {
-      "dependencies": [
-        "npm:patchright@^1.52.5"
-      ]
-    }
+    ]
   }
 }
