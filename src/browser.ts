@@ -3,6 +3,8 @@ import playwright from "patchright";
 import { Entry } from "@napi-rs/keyring";
 import $ from "@david/dax";
 
+import { program as playwrightCli } from "patchright/lib/program";
+
 const entry = new Entry("io.github.atty303.konaste-linux", "passkey-default");
 
 async function launchBrowser() {
@@ -56,7 +58,7 @@ function installCommand() {
     .description("Install the browser")
     .action(async () => {
       $.logStep("Installing browser...");
-      await playwright.chromium.install();
+      await playwrightCli.parse(["npx", "playwright", "install", "chromium"]);
       $.log("Browser installed successfully.");
     });
 }
