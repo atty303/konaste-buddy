@@ -294,6 +294,7 @@
       "jsr:@cliffy/ansi@^1.0.0-rc.8",
       "jsr:@cliffy/command@^1.0.0-rc.8",
       "jsr:@david/dax@~0.43.2",
+      "jsr:@std/path@^1.1.1",
       "npm:@napi-rs/keyring@^1.1.8",
       "npm:patchright@^1.52.5"
     ]
