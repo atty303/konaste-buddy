@@ -78,7 +78,18 @@ processes:
           kdotool windowclose $window
         }
 
-  # I don't understand KWin's window rules, so I use kdotool to place the OBS window
+  # I can't configure WirePlumber to automatically link gamescope's capture to OBS, so I do it as dumb
+  link-gamescope-obs:
+    command: |
+      sleep 15sec
+      pw-link gamescope:capture_1 gameobs:input_1
+    depends_on:
+      game:
+        condition: process_started
+      obs:
+        condition: process_healthy
+
+  # I can't understand KWin's window rules, so I use kdotool to place the OBS window
   obs-placement:
     command: |
         let window = (kdotool search --class com.obsproject.Studio | lines).0
