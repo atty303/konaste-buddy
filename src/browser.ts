@@ -2,15 +2,20 @@ import { Command } from "@cliffy/command";
 import playwright from "patchright";
 import { Entry } from "@napi-rs/keyring";
 import $ from "@david/dax";
+import * as path from "@std/path";
+import xdg from "@404wolf/xdg-portable";
 
 const entry = new Entry("io.github.atty303.konaste-linux", "passkey-default");
+
+const browserStorage = path.join(xdg.state(), "konaste-buddy", "browser-storage");
+$.path(browserStorage).parent()?.ensureDir();
 
 async function launchBrowser(executablePath?: string) {
   const browser = await playwright.chromium.launch({
     headless: false,
     executablePath: executablePath,
   });
-  const context = await browser.newContext();
+  const context = await browser.newContext({storageState: browserStorage});
   const page = await context.newPage();
   const cdp = await context.newCDPSession(page);
   await cdp.send("WebAuthn.enable");
@@ -192,6 +197,8 @@ function launchCommand() {
 
       $.logStep("Successfully navigated to the game URL:");
       console.log(navigatedSchemeUrl);
+
+      await b.context.storageState({ path: browserStorage });
 
       await b.close();
     });
