@@ -1,0 +1,107 @@
+version: "0.5"
+
+# ubi -i ~/.local/bin -p F1bonacc1/process-compose
+# ubi -i ~/.local/bin -p grigio/obs-cmd
+# ubi -i ~/.local/bin -p jinliu/kdotool -t v0.2.1
+
+log_level: info
+log_configuration:
+  disable_json: true
+  add_timestamp: true
+
+disable_env_expansion: true
+shell:
+  shell_command: nu
+  shell_argument: "-c"
+
+environment:
+  # - GAME=infinitas
+
+  - TWITCH_BROADCASTER_ID=141025463
+  - TWITCH_GAME_ID=1055720961
+  - TWITCH_STREAM_TITLE="Linuxに移行したので環境構築のテストプレイ [Playing on Linux]"
+  - TWITCH_STREAM_TAGS=LinuxGaming,bemani
+  - TWITCH_USER_DESCRIPTION=
+
+  - BROWSER_EXE=/var/lib/flatpak/exports/bin/com.google.Chrome
+  - OBS_WEBSOCKET=localhost:4455
+
+  - RUN_URL_FILE=/tmp/run_url.txt
+
+processes:
+  get-run-url:
+    command: |
+      rm -f $env.RUN_URL_FILE
+      let game = (konaste ls --json | from json | where id == $env.GAME)
+      let run_url = (konaste-buddy browser launch --browser $env.BROWSER_EXE --url ($game | get loginUrl).0 --scheme ($game | get urlScheme).0)
+      $run_url | save -f $env.RUN_URL_FILE
+
+  game:
+    command: |
+      let run_url = (open $env.RUN_URL_FILE | str trim)
+      rm -f $env.RUN_URL_FILE
+
+      konaste $env.GAME run $run_url
+    availability:
+      # Exit the whole processes when the game ends
+      exit_on_end: true
+    depends_on:
+      get-run-url:
+        condition: process_completed_successfully
+
+  # OBS Studio for streaming
+  obs:
+    command: ^/var/lib/flatpak/exports/bin/com.obsproject.Studio --disable-shutdown-check
+    availability:
+      # I want to close OBS by window manager, so I don't want to restart it
+      restart: "no"
+    # Ready when the OBS WebSocket is ready
+    readiness_probe:
+      exec:
+        command: bash -c "test $(curl -f -s -w "%{http_code}" http://localhost:4455) = '426'"
+    # OBS does not support graceful shutdown by signal, so we have to close it by window manager
+    # I'm currently using KDE Plasma/KWin, so I use kdotool to close the OBS window
+    shutdown:
+      command: |
+        let ws = $"obsws://($env.OBS_WEBSOCKET)/(kwallet-query -r 'OBS WebSocket' -f Passwords kdewallet)"
+        obs-cmd -w $ws streaming stop
+
+        let windows = (kdotool search --class com.obsproject.Studio | lines)
+        $windows | each {|window|
+          kdotool getwindowname $window
+          kdotool windowclose $window
+        }
+
+  # I don't understand KWin's window rules, so I use kdotool to place the OBS window
+  obs-placement:
+    command: |
+        let window = (kdotool search --class com.obsproject.Studio | lines).0
+        kdotool windowmove $window 1044 2160
+        kdotool windowsize $window 1400 1076
+    depends_on:
+      obs:
+        condition: process_healthy
+
+  # OBS WebSocket Proxy for extension
+  obs-ws-proxy:
+    command: "konaste $env.GAME obs-websocket-proxy"
+    availability:
+      restart: on_failure
+    readiness_probe:
+      exec:
+        command: bash -c "test $(curl -f -s -w "%{http_code}" http://localhost:4456) = '426'"
+
+  # Start streaming on Twitch with updated game and title
+  start-streaming:
+    command: |
+      let tags = $env.TWITCH_STREAM_TAGS | split row "," | each { [ "-q" $"tags=($in)" ] } | flatten
+      twitch api patch /channels -q $"broadcaster_id=($env.TWITCH_BROADCASTER_ID)" -q $"game_id=($env.TWITCH_GAME_ID)" -q $"title=($env.TWITCH_STREAM_TITLE)" ...$tags | complete
+      # twitch api put /users -q description=$env.TWITCH_USER_DESCRIPTION
+
+      let ws = $"obsws://($env.OBS_WEBSOCKET)/(kwallet-query -r 'OBS WebSocket' -f Passwords kdewallet)"
+      obs-cmd -w $ws streaming start
+    depends_on:
+      game:
+        condition: process_started
+    # When testing setup, set this to true to avoid starting the stream automatically
+    disabled: true

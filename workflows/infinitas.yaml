@@ -1,0 +1,24 @@
+version: "0.5"
+extends: base.yaml
+
+environment:
+  - GAME=infinitas
+
+  - TWITCH_GAME_ID=1055720961
+  - TWITCH_STREAM_TITLE="Linuxに移行したので環境構築のテストプレイ [Playing on Linux]"
+  - TWITCH_STREAM_TAGS=LinuxGaming,bemani
+  - TWITCH_USER_DESCRIPTION=
+
+processes:
+  # extension: https://github.com/dj-kata/inf_daken_counter_obsw
+  extension:
+    # It's a normal Windows application, so we run it without Proton
+    command: ^wine-stable_10.0-x86_64.AppImage notes_counter.exe
+    working_dir: /home/atty/Applications/inf_daken_counter
+    shutdown:
+      command: killall notes_counter.exe
+    depends_on:
+      obs:
+        condition: process_healthy
+      obs-ws-proxy:
+        condition: process_healthy
