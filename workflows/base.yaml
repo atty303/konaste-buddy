@@ -24,10 +24,10 @@ environment:
   # - GAME=infinitas
 
   - TWITCH_BROADCASTER_ID=141025463
-  - TWITCH_GAME_ID=1055720961
-  - TWITCH_STREAM_TITLE="Linuxに移行したので環境構築のテストプレイ [Playing on Linux]"
-  - TWITCH_STREAM_TAGS=LinuxGaming,bemani
-  - TWITCH_USER_DESCRIPTION=
+  # - TWITCH_GAME_ID=1055720961
+  # - TWITCH_STREAM_TITLE=Linuxに移行したので環境構築のテストプレイ [Playing on Linux]
+  # - TWITCH_STREAM_TAGS=LinuxGaming,bemani
+  # - TWITCH_USER_DESCRIPTION=
 
   - BROWSER_EXE=/var/lib/flatpak/exports/bin/com.google.Chrome
   - OBS_WEBSOCKET=localhost:4455
@@ -35,25 +35,15 @@ environment:
   - RUN_URL_FILE=/tmp/run_url.txt
 
 processes:
-  get-run-url:
-    command: |
-      rm -f $env.RUN_URL_FILE
-      let game = (konaste ls --json | from json | where id == $env.GAME)
-      let run_url = (konaste-buddy browser launch --browser $env.BROWSER_EXE --url ($game | get loginUrl).0 --scheme ($game | get urlScheme).0)
-      $run_url | save -f $env.RUN_URL_FILE
-
   game:
     command: |
-      let run_url = (open $env.RUN_URL_FILE | str trim)
-      rm -f $env.RUN_URL_FILE
+      let game = (konaste ls --json | from json | where id == $env.GAME)
+      let run_url = (konaste-buddy browser launch --browser $env.BROWSER_EXE --url ($game | get loginUrl).0 --scheme ($game | get urlScheme).0)
 
       konaste $env.GAME run $run_url
     availability:
       # Exit the whole processes when the game ends
       exit_on_end: true
-    depends_on:
-      get-run-url:
-        condition: process_completed_successfully
 
   # OBS Studio for streaming
   obs:
