@@ -1,8 +1,14 @@
 version: "0.5"
 
-# ubi -i ~/.local/bin -p F1bonacc1/process-compose
-# ubi -i ~/.local/bin -p grigio/obs-cmd
-# ubi -i ~/.local/bin -p jinliu/kdotool -t v0.2.1
+# Requirements:
+# - Bazzite Desktop (KDE Plasma)
+# - ubi -i ~/.local/bin -p jinliu/kdotool -t v0.2.1
+# - ubi -i ~/.local/bin -p F1bonacc1/process-compose
+# - konaste infinitas configured
+# - konaste-buddy configured
+# - OBS Studio configured with WebSocket
+# - ubi -i ~/.local/bin -p grigio/obs-cmd
+# - twitch-cli configured : brew install twitch-cli
 
 log_level: info
 log_configuration:
