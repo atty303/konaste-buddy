@@ -7,7 +7,7 @@ import xdg from "@404wolf/xdg-portable";
 
 const entry = new Entry("io.github.atty303.konaste-linux", "passkey-default");
 
-const browserStorage = path.join(xdg.state(), "konaste-buddy", "browser-storage");
+const browserStorage = path.join(xdg.state(), "konaste-buddy", "browser-storage.json");
 $.path(browserStorage).parent()?.ensureDir();
 
 async function launchBrowser(executablePath?: string) {
@@ -15,7 +15,8 @@ async function launchBrowser(executablePath?: string) {
     headless: false,
     executablePath: executablePath,
   });
-  const context = await browser.newContext({storageState: browserStorage});
+  const storage = await $.path(browserStorage).exists() ? browserStorage : undefined;
+  const context = await browser.newContext({storageState: storage});
   const page = await context.newPage();
   const cdp = await context.newCDPSession(page);
   await cdp.send("WebAuthn.enable");
@@ -175,10 +176,11 @@ function launchCommand() {
       // (e.g., bm2dxinf://)
       b.page.on("requestfailed", (request) => {
         $.logLight(
-          `Request failed: ${request.url()} - ${request.failure()?.errorText}`,
+          `Failed request observed: ${request.url()} - ${request.failure()?.errorText}`,
         );
         if (request.url().startsWith(`${options.scheme}://`)) {
           navigatedSchemeUrl = request.url();
+          $.log("Navigated to game URL scheme: ", navigatedSchemeUrl);
         }
       });
       await b.page.getByRole("link", { name: "ゲーム起動" }).click({
@@ -189,13 +191,15 @@ function launchCommand() {
         $.logWarn("Failed to click the game launch link:", error);
       });
 
+      await b.page.waitForLoadState("networkidle");
+
       if (!navigatedSchemeUrl) {
         throw new Error(
           `No request with scheme ${options.scheme} found.`,
         );
       }
 
-      $.logStep("Successfully navigated to the game URL:");
+      $.logStep("Successfully navigated to the game URL:", navigatedSchemeUrl);
       console.log(navigatedSchemeUrl);
 
       await b.context.storageState({ path: browserStorage });
