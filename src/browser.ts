@@ -7,7 +7,11 @@ import xdg from "@404wolf/xdg-portable";
 
 const entry = new Entry("io.github.atty303.konaste-linux", "passkey-default");
 
-const browserStorage = path.join(xdg.state(), "konaste-buddy", "browser-storage.json");
+const browserStorage = path.join(
+  xdg.state(),
+  "konaste-buddy",
+  "browser-storage.json",
+);
 $.path(browserStorage).parent()?.ensureDir();
 
 async function launchBrowser(executablePath?: string) {
@@ -15,8 +19,10 @@ async function launchBrowser(executablePath?: string) {
     headless: false,
     executablePath: executablePath,
   });
-  const storage = await $.path(browserStorage).exists() ? browserStorage : undefined;
-  const context = await browser.newContext({storageState: storage});
+  const storage = await $.path(browserStorage).exists()
+    ? browserStorage
+    : undefined;
+  const context = await browser.newContext({ storageState: storage });
   const page = await context.newPage();
   const cdp = await context.newCDPSession(page);
   await cdp.send("WebAuthn.enable");

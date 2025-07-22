@@ -22,7 +22,6 @@ shell:
 
 environment:
   # - GAME=infinitas
-
   - TWITCH_BROADCASTER_ID=141025463
   # - TWITCH_GAME_ID=1055720961
   # - TWITCH_STREAM_TITLE=Linuxに移行したので環境構築のテストプレイ [Playing on Linux]
@@ -82,9 +81,9 @@ processes:
   # I can't understand KWin's window rules, so I use kdotool to place the OBS window
   obs-placement:
     command: |
-        let window = (kdotool search --class com.obsproject.Studio | lines).0
-        kdotool windowmove $window 1044 2160
-        kdotool windowsize $window 1400 1076
+      let window = (kdotool search --class com.obsproject.Studio | lines).0
+      kdotool windowmove $window 1044 2160
+      kdotool windowsize $window 1400 1076
     depends_on:
       obs:
         condition: process_healthy
