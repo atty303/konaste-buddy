@@ -2,9 +2,9 @@ version: "0.5"
 extends: base.yaml
 
 environment:
-  - GAME=infinitas
+  - GAME=sdvx
 
-  - TWITCH_GAME_ID=1055720961
+  - TWITCH_GAME_ID=1259504587
   - TWITCH_STREAM_TITLE="Linuxに移行したので環境構築のテストプレイ [Playing on Linux]"
   - TWITCH_STREAM_TAGS=LinuxGaming,bemani
   - TWITCH_USER_DESCRIPTION=
@@ -14,19 +14,19 @@ processes:
   obs-placement:
     command: |
       let window = (kdotool search --class com.obsproject.Studio | lines).0
-      kdotool windowmove $window 1044 2160
-      kdotool windowsize $window 1400 1036
+      kdotool windowmove $window 417 3839
+      kdotool windowsize $window 891 757
     depends_on:
       obs:
         condition: process_healthy
 
-  # extension: https://github.com/dj-kata/inf_daken_counter_obsw
+  # extension: https://github.com/dj-kata/sdvx_helper
   extension:
     # It's a normal Windows application, so we run it without Proton
-    command: ^wine-stable_10.0-x86_64.AppImage notes_counter.exe
-    working_dir: /home/atty/Applications/inf_daken_counter
+    command: ^/var/lib/flatpak/exports/bin/org.winehq.Wine sdvx_helper.exe
+    working_dir: /home/atty/Applications/sdvx_helper
     shutdown:
-      command: killall notes_counter.exe
+      command: killall sdvx_helper.exe
     depends_on:
       obs:
         condition: process_healthy

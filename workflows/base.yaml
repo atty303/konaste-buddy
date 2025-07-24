@@ -31,8 +31,6 @@ environment:
   - BROWSER_EXE=/var/lib/flatpak/exports/bin/com.google.Chrome
   - OBS_WEBSOCKET=localhost:4455
 
-  - RUN_URL_FILE=/tmp/run_url.txt
-
 processes:
   game:
     command: |
@@ -78,16 +76,6 @@ processes:
       obs:
         condition: process_healthy
 
-  # I can't understand KWin's window rules, so I use kdotool to place the OBS window
-  obs-placement:
-    command: |
-      let window = (kdotool search --class com.obsproject.Studio | lines).0
-      kdotool windowmove $window 1044 2160
-      kdotool windowsize $window 1400 1076
-    depends_on:
-      obs:
-        condition: process_healthy
-
   # OBS WebSocket Proxy for extension
   obs-ws-proxy:
     command: "konaste $env.GAME obs-websocket-proxy"
@@ -110,4 +98,4 @@ processes:
       game:
         condition: process_started
     # When testing setup, set this to true to avoid starting the stream automatically
-    disabled: true
+    disabled: false
