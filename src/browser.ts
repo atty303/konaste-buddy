@@ -189,25 +189,29 @@ function launchCommand() {
           $.log("Navigated to game URL scheme: ", navigatedSchemeUrl);
         }
       });
-      await Promise.race([
-        // infinitas
+
+      // Try to click button for INFINITAS
+      try {
         await b.page.getByRole("link", { name: "ゲーム起動" }).click({
           timeout: 1000,
-        }),
-        // Modern konaste games (e.g., sdvx)
-        (async () => {
-          await b.page.getByRole("link", { name: "起動処理を続ける" }).click({
-            timeout: 1000,
-          });
-          await b.page.getByRole("button", { name: "ゲーム起動" }).click({
-            timeout: 1000,
-          });
-        })(),
-      ]).catch((error) => {
+        });
+      } catch (error) {
+        $.logWarn("Failed to click the game launch link:", error);
+      }
+
+      // Try to click button for SDVX
+      try {
+        await b.page.getByRole("link", { name: "起動処理を続ける" }).click({
+          timeout: 1000,
+        }).catch((error) => $.log("There is no continue link"));
+        await b.page.getByRole("button", { name: "ゲーム起動" }).click({
+          timeout: 1000,
+        });
+      } catch (error) {
         // Some games redirect to a game URL scheme by script then net::ERR_ABORTED error occurs
         // (e.g., konaste.sdvx://)
         $.logWarn("Failed to click the game launch link:", error);
-      });
+      }
 
       await b.page.waitForLoadState("networkidle");
 

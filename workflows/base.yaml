@@ -89,7 +89,7 @@ processes:
   start-streaming:
     command: |
       let tags = $env.TWITCH_STREAM_TAGS | split row "," | each { [ "-q" $"tags=($in)" ] } | flatten
-      twitch api patch /channels -q $"broadcaster_id=($env.TWITCH_BROADCASTER_ID)" -q $"game_id=($env.TWITCH_GAME_ID)" -q $"title=($env.TWITCH_STREAM_TITLE)" ...$tags | complete
+      /home/linuxbrew/.linuxbrew/bin/twitch api patch /channels -q $"broadcaster_id=($env.TWITCH_BROADCASTER_ID)" -q $"game_id=($env.TWITCH_GAME_ID)" -q $"title=($env.TWITCH_STREAM_TITLE)" ...$tags | complete
       # twitch api put /users -q description=$env.TWITCH_USER_DESCRIPTION
 
       let ws = $"obsws://($env.OBS_WEBSOCKET)/(kwallet-query -r 'OBS WebSocket' -f Passwords kdewallet)"
