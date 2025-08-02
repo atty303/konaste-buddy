@@ -5,8 +5,6 @@ import $ from "@david/dax";
 import * as path from "@std/path";
 import xdg from "@404wolf/xdg-portable";
 
-const entry = new Entry("io.github.atty303.konaste-linux", "passkey-default");
-
 const browserStorage = path.join(
   xdg.state(),
   "konaste-buddy",
@@ -50,7 +48,8 @@ async function launchBrowser(executablePath?: string) {
       await context.close();
       await browser.close();
     },
-    loadCredentials: async () => {
+    loadCredentials: async (service: string, name: string) => {
+      const entry = new Entry(service, name);
       const text = entry.getPassword();
       if (!text) {
         throw new Error(
@@ -66,36 +65,6 @@ async function launchBrowser(executablePath?: string) {
   };
 }
 
-function importPasskeyCommand() {
-  return new Command()
-    .description("Import a passkey to the keyring")
-    .example(
-      "Import a passkey from stdin",
-      "cat passkey.json | konaste-buddy browser import-passkey",
-    )
-    .action(async () => {
-      if (Deno.stdin) {
-        const text = await new Response(Deno.stdin.readable).text();
-        if (!text) {
-          throw new Error("No input provided. Please provide a passkey JSON.");
-        }
-        entry.setPassword(text);
-      }
-    });
-}
-
-function exportPasskeyCommand() {
-  return new Command()
-    .description("Export the passkey from the keyring")
-    .action(() => {
-      const text = entry.getPassword();
-      if (!text) {
-        throw new Error("No passkey found in keyring.");
-      }
-      console.log(text);
-    });
-}
-
 function registerCommand() {
   return new Command()
     .description("Register a passkey at visiting account page")
@@ -107,6 +76,16 @@ function registerCommand() {
       "The URL to start the registration process",
       { required: true, default: "https://my.konami.net/" },
     )
+    .option(
+      "--passkey-service <service:string>",
+      "Service name for the passkey",
+      {
+        default: "io.github.atty303.konaste-buddy",
+      },
+    )
+    .option("--passkey-name <name:string>", "Name of the passkey", {
+      default: "passkey-default",
+    })
     .action(async (options) => {
       const b = await launchBrowser(options.browser);
       b.cdp.on("WebAuthn.credentialAdded", (payload) => {
@@ -114,6 +93,7 @@ function registerCommand() {
           `Added credential: ${payload.credential.userDisplayName} (${payload.credential.credentialId})`,
         );
         $.logLight(JSON.stringify(payload.credential));
+        const entry = new Entry(options.passkeyService, options.passkeyName);
         entry.setPassword(JSON.stringify(payload.credential));
       });
 
@@ -140,9 +120,19 @@ function recordCommand() {
       "The URL to visit for login",
       { required: true },
     )
+    .option(
+      "--passkey-service <service:string>",
+      "Service name for the passkey",
+      {
+        default: "io.github.atty303.konaste-buddy",
+      },
+    )
+    .option("--passkey-name <name:string>", "Name of the passkey", {
+      default: "passkey-default",
+    })
     .action(async (options) => {
       const b = await launchBrowser(options.browser);
-      b.loadCredentials();
+      b.loadCredentials(options.passkeyService, options.passkeyName);
 
       await b.page.goto(options.url);
 
@@ -169,9 +159,19 @@ function launchCommand() {
     .option("-s, --scheme <scheme:string>", "The URL scheme to expect", {
       required: true,
     })
+    .option(
+      "--passkey-service <service:string>",
+      "Service name for the passkey",
+      {
+        default: "io.github.atty303.konaste-buddy",
+      },
+    )
+    .option("--passkey-name <name:string>", "Name of the passkey", {
+      default: "passkey-default",
+    })
     .action(async (options) => {
       const b = await launchBrowser(options.browser);
-      await b.loadCredentials();
+      await b.loadCredentials(options.passkeyService, options.passkeyName);
 
       await b.page.goto(options.url, { timeout: 30000 });
 
@@ -233,7 +233,5 @@ function launchCommand() {
 export const browserCommand = new Command()
   .description("Browser management commands")
   .command("register-passkey", registerCommand())
-  .command("import-passkey", importPasskeyCommand())
-  .command("export-passkey", exportPasskeyCommand())
   .command("record", recordCommand())
   .command("launch", launchCommand());
