@@ -1,6 +1,8 @@
 version: "0.5"
 extends: base.yaml
 
+disable_env_expansion: true
+
 environment:
   - GAME=sdvx
   - CONTROLLER_DEVICE=/dev/input/by-id/usb-Konami_Amusement_SOUND_VOLTEX_controller_BF002-joystick
@@ -13,7 +15,7 @@ environment:
 processes:
   pre-condition:
     command: |
-      if not (path exists $env.CONTROLLER_DEVICE) {
+      if not ($env.CONTROLLER_DEVICE | path exists) {
         print -e s"Controller device not found: ($env.CONTROLLER_DEVICE)"
         exit 1
       }
@@ -24,7 +26,7 @@ processes:
         exit 1
       }
 
-      if (($buttons | where value == 1) | length) > 0 {
+      if ($buttons | where value == 1 | length) > 0 {
         print "Skipping stream start because the controller buttons are pressed"
         rm -f $env.START_STREAMING_FILE
       } else {
@@ -40,8 +42,8 @@ processes:
     command: /var/lib/flatpak/exports/bin/org.winehq.Wine sdvx_helper.exe
     working_dir: /home/atty/Applications/sdvx_helper
     shutdown:
-      command: /var/lib/flatpak/exports/bin/org.winehq.Wine cmd /c "taskkill /im sdvx_helper.exe"
-      # hyprctl dispatch closewindow class:sdvx_helper.exe
+      # command: /var/lib/flatpak/exports/bin/org.winehq.Wine cmd /c "taskkill /im sdvx_helper.exe"
+      command: hyprctl dispatch closewindow class:sdvx_helper.exe
     depends_on:
       obs:
         condition: process_healthy
