@@ -4,6 +4,7 @@ import { UpgradeCommand } from "@cliffy/command/upgrade";
 import { GithubProvider } from "@cliffy/command/upgrade/provider/github";
 import versionJson from "../version.json" with { type: "json" };
 import { browserCommand } from "./browser.ts";
+import { controllerCommand } from "./controller.ts";
 
 const cmd = new Command()
   .name("konaste-buddy")
@@ -25,6 +26,7 @@ const cmd = new Command()
       );
     }),
   )
-  .command("browser", browserCommand);
+  .command("browser", browserCommand)
+  .command("controller", controllerCommand);
 
 await cmd.parse();
