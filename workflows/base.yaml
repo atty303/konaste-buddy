@@ -10,7 +10,7 @@ version: "0.5"
 # - ubi -i ~/.local/bin -p grigio/obs-cmd
 # - twitch-cli configured : brew install twitch-cli
 
-log_level: info
+log_level: debug
 log_configuration:
   disable_json: true
   add_timestamp: true
@@ -30,9 +30,12 @@ environment:
 
   - BROWSER_EXE=/var/lib/flatpak/exports/bin/com.google.Chrome
   - OBS_WEBSOCKET=localhost:4455
+  - START_STREAMING_FILE=/tmp/konaste-buddy-start-streaming
 
 processes:
   game:
+    #    environment:
+    #      - "DRI_PRIME=1002:743f!"
     command: |
       let game = (konaste ls --json | from json | where id == $env.GAME)
       let run_url = (konaste-buddy browser launch --browser $env.BROWSER_EXE --url ($game | get loginUrl).0 --scheme ($game | get urlScheme).0)
@@ -41,29 +44,36 @@ processes:
     availability:
       # Exit the whole processes when the game ends
       exit_on_end: true
+    depends_on:
+      pre-condition:
+        condition: process_completed_successfully
 
   # OBS Studio for streaming
   obs:
     command: ^/var/lib/flatpak/exports/bin/com.obsproject.Studio --disable-shutdown-check
-    availability:
-      # I want to close OBS by window manager, so I don't want to restart it
-      restart: "no"
+    environment:
+      # Offload rendering to integrated GPU
+      - "DRI_PRIME=1002:164e!"
     # Ready when the OBS WebSocket is ready
     readiness_probe:
+      initial_delay_seconds: 5
+      period_seconds: 1
+      failure_threshold: 5
       exec:
-        command: bash -c "test $(curl -f -s -w "%{http_code}" http://localhost:4455) = '426'"
+        # This doesn't respect shell configuration
+        command: test $(curl -f -s -w "%{http_code}" http://localhost:4455) = '426'
+        #command: nu -c "if (http get -ef http://localhost:4455/ | $in.status == 426) { exit 0 } else { exit 1 }"
     # OBS does not support graceful shutdown by signal, so we have to close it by window manager
-    # I'm currently using KDE Plasma/KWin, so I use kdotool to close the OBS window
     shutdown:
+      timeout_seconds: 10
       command: |
-        let ws = $"obsws://($env.OBS_WEBSOCKET)/(kwallet-query -r 'OBS WebSocket' -f Passwords kdewallet)"
-        obs-cmd -w $ws streaming stop
+        #let ws = $"obsws://($env.OBS_WEBSOCKET)/(kwallet-query -r 'OBS WebSocket' -f Passwords kdewallet)"
+        #obs-cmd -w $ws streaming stop
 
-        let windows = (kdotool search --class com.obsproject.Studio | lines)
-        $windows | each {|window|
-          kdotool getwindowname $window
-          kdotool windowclose $window
-        }
+        hyprctl dispatch closewindow class:com.obsproject.Studio
+    depends_on:
+      pre-condition:
+        condition: process_completed_successfully
 
   # I can't configure WirePlumber to automatically link gamescope's capture to OBS, so I do it as dumb
   link-gamescope-obs:
@@ -83,11 +93,19 @@ processes:
       restart: on_failure
     readiness_probe:
       exec:
-        command: bash -c "test $(curl -f -s -w "%{http_code}" http://localhost:4456) = '426'"
+        command: test $(curl -f -s -w "%{http_code}" http://localhost:4456) = '426'
+    depends_on:
+      obs:
+        condition: process_healthy
 
   # Start streaming on Twitch with updated game and title
   start-streaming:
     command: |
+      if not (path exists $env.START_STREAMING_FILE) {
+        print "Skipping stream start because the start file does not exist"
+        exit 1
+      }
+
       let tags = $env.TWITCH_STREAM_TAGS | split row "," | each { [ "-q" $"tags=($in)" ] } | flatten
       /home/linuxbrew/.linuxbrew/bin/twitch api patch /channels -q $"broadcaster_id=($env.TWITCH_BROADCASTER_ID)" -q $"game_id=($env.TWITCH_GAME_ID)" -q $"title=($env.TWITCH_STREAM_TITLE)" ...$tags | complete
       # twitch api put /users -q description=$env.TWITCH_USER_DESCRIPTION
@@ -97,5 +115,13 @@ processes:
     depends_on:
       game:
         condition: process_started
+      obs:
+        condition: process_healthy
     # When testing setup, set this to true to avoid starting the stream automatically
     disabled: false
+
+  twitch-chat:
+    command: /var/lib/flatpak/exports/bin/com.chatterino.chatterino
+    depends_on:
+      start-streaming:
+        condition: process_completed_successfully

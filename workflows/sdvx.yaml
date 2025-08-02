@@ -3,30 +3,45 @@ extends: base.yaml
 
 environment:
   - GAME=sdvx
+  - CONTROLLER_DEVICE=/dev/input/by-id/usb-Konami_Amusement_SOUND_VOLTEX_controller_BF002-joystick
 
   - TWITCH_GAME_ID=1259504587
-  - TWITCH_STREAM_TITLE="Linuxに移行したので環境構築のテストプレイ [Playing on Linux]"
+  - TWITCH_STREAM_TITLE=Linuxに移行したので環境構築のテストプレイ [Playing on Linux]
   - TWITCH_STREAM_TAGS=LinuxGaming,bemani
   - TWITCH_USER_DESCRIPTION=
 
 processes:
-  # I can't understand KWin's window rules, so I use kdotool to place the OBS window
-  obs-placement:
+  pre-condition:
     command: |
-      let window = (kdotool search --class com.obsproject.Studio | lines).0
-      kdotool windowmove $window 417 3839
-      kdotool windowsize $window 891 757
-    depends_on:
-      obs:
-        condition: process_healthy
+      if not (path exists $env.CONTROLLER_DEVICE) {
+        print -e s"Controller device not found: ($env.CONTROLLER_DEVICE)"
+        exit 1
+      }
+
+      let buttons = (konaste-buddy controller read -d $env.CONTROLLER_DEVICE | from json | where type == "button")
+      if ($buttons | where number == 0).value == 1 {
+        print -e "Aborting because the start button is pressed"
+        exit 1
+      }
+
+      if (($buttons | where value == 1) | length) > 0 {
+        print "Skipping stream start because the controller buttons are pressed"
+        rm -f $env.START_STREAMING_FILE
+      } else {
+        touch $env.START_STREAMING_FILE
+      }
+
+    availability:
+      restart: exit_on_failure
 
   # extension: https://github.com/dj-kata/sdvx_helper
   extension:
     # It's a normal Windows application, so we run it without Proton
-    command: ^/var/lib/flatpak/exports/bin/org.winehq.Wine sdvx_helper.exe
+    command: /var/lib/flatpak/exports/bin/org.winehq.Wine sdvx_helper.exe
     working_dir: /home/atty/Applications/sdvx_helper
     shutdown:
-      command: killall sdvx_helper.exe
+      command: /var/lib/flatpak/exports/bin/org.winehq.Wine cmd /c "taskkill /im sdvx_helper.exe"
+      # hyprctl dispatch closewindow class:sdvx_helper.exe
     depends_on:
       obs:
         condition: process_healthy
