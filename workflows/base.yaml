@@ -28,17 +28,19 @@ environment:
   # - TWITCH_STREAM_TAGS=LinuxGaming,bemani
   # - TWITCH_USER_DESCRIPTION=
 
-  - SECRET_BACKEND=file
   - BROWSER_EXE=/var/lib/flatpak/exports/bin/com.google.Chrome
   - OBS_WEBSOCKET=localhost:4455
   - START_STREAMING_FILE=/tmp/konaste-buddy-start-streaming
 
 processes:
   game:
+    environment:
+      - "DRI_PRIME=10de:1e82!"
     command: |
       let game = (konaste ls --json | from json | where id == $env.GAME)
       let run_url = (konaste-buddy browser launch --browser $env.BROWSER_EXE --url ($game | get loginUrl).0 --scheme ($game | get urlScheme).0)
 
+      vkcube --c 2
       konaste $env.GAME run $run_url
     availability:
       # Exit the whole processes when the game ends
@@ -65,22 +67,10 @@ processes:
     # OBS does not support graceful shutdown by signal, so we have to close it by window manager
     shutdown:
       timeout_seconds: 10
-      # TODO: If gameobs source is not linked, obs will not close
       command: hyprctl dispatch closewindow class:com.obsproject.Studio
     depends_on:
       pre-condition:
         condition: process_completed_successfully
-
-  # I can't configure WirePlumber to automatically link gamescope's capture to OBS, so I do it as dumb
-  link-gamescope-obs:
-    command: |
-      sleep 15sec
-      pw-link gamescope:capture_1 gameobs:input_1
-    depends_on:
-      game:
-        condition: process_started
-      obs:
-        condition: process_healthy
 
   # OBS WebSocket Proxy for extension
   obs-ws-proxy:

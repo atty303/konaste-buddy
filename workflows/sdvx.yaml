@@ -8,7 +8,7 @@ environment:
   - CONTROLLER_DEVICE=/dev/input/by-id/usb-Konami_Amusement_SOUND_VOLTEX_controller_BF002-joystick
 
   - TWITCH_GAME_ID=1259504587
-  - TWITCH_STREAM_TITLE=Linuxに移行したので環境構築のテストプレイ [Playing on Linux]
+  - TWITCH_STREAM_TITLE=VF19.00を目指して日々鍛錬
   - TWITCH_STREAM_TAGS=LinuxGaming,bemani
   - TWITCH_USER_DESCRIPTION=
 

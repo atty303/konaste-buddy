@@ -20,6 +20,17 @@ processes:
       obs:
         condition: process_healthy
 
+  # I can't configure WirePlumber to automatically link gamescope's capture to OBS, so I do it as dumb
+  link-gamescope-obs:
+    command: |
+      sleep 15sec
+      pw-link gamescope:capture_1 gameobs:input_1
+    depends_on:
+      game:
+        condition: process_started
+      obs:
+        condition: process_healthy
+
   # extension: https://github.com/dj-kata/inf_daken_counter_obsw
   extension:
     # It's a normal Windows application, so we run it without Proton
