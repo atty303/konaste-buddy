@@ -203,7 +203,7 @@ function launchCommand() {
       try {
         await b.page.getByRole("link", { name: "起動処理を続ける" }).click({
           timeout: 1000,
-        }).catch((error) => $.log("There is no continue link"));
+        }).catch((error) => $.log("There is no continue link:", error));
         await b.page.getByRole("button", { name: "ゲーム起動" }).click({
           timeout: 1000,
         });
