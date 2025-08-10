@@ -35,12 +35,12 @@ environment:
 processes:
   game:
     environment:
-      - "DRI_PRIME=10de:1e82!"
+      # - "DRI_PRIME=10de:1e82!"
     command: |
       let game = (konaste ls --json | from json | where id == $env.GAME)
       let run_url = (konaste-buddy browser launch --browser $env.BROWSER_EXE --url ($game | get loginUrl).0 --scheme ($game | get urlScheme).0)
 
-      vkcube --c 2
+      vkcube --c 1
       konaste $env.GAME run $run_url
     availability:
       # Exit the whole processes when the game ends
@@ -54,7 +54,9 @@ processes:
     command: /var/lib/flatpak/exports/bin/com.obsproject.Studio --disable-shutdown-check
     environment:
       # Offload rendering to integrated GPU
-      - "DRI_PRIME=1002:164e!"
+      # - "DRI_PRIME=1002:164e!"
+#      - "LIBGL_ALWAYS_SOFTWARE=true"
+#      - "GALLIUM_DRIVER=llbmpipe"
     # Ready when the OBS WebSocket is ready
     readiness_probe:
       initial_delay_seconds: 10
