@@ -1,45 +1,45 @@
 version: "0.5"
 extends: base.yaml
 
+disable_env_expansion: true
+
 environment:
   - GAME=infinitas
+  - CONTROLLER_DEVICE=/dev/input/js0
 
   - TWITCH_GAME_ID=1055720961
-  - TWITCH_STREAM_TITLE="Linuxに移行したので環境構築のテストプレイ [Playing on Linux]"
+  - TWITCH_STREAM_TITLE=低難易度からリハビリする。ついでに正規厨も卒業する
   - TWITCH_STREAM_TAGS=LinuxGaming,bemani
   - TWITCH_USER_DESCRIPTION=
 
 processes:
-  # I can't understand KWin's window rules, so I use kdotool to place the OBS window
-  obs-placement:
+  pre-condition:
     command: |
-      let window = (kdotool search --class com.obsproject.Studio | lines).0
-      kdotool windowmove $window 1044 2160
-      kdotool windowsize $window 1400 1036
-    depends_on:
-      obs:
-        condition: process_healthy
+      if not ($env.CONTROLLER_DEVICE | path exists) {
+        print -e s"Controller device not found: ($env.CONTROLLER_DEVICE)"
+        exit 1
+      }
 
-  # I can't configure WirePlumber to automatically link gamescope's capture to OBS, so I do it as dumb
-  link-gamescope-obs:
-    command: |
-      sleep 15sec
-      pw-link gamescope:capture_1 gameobs:input_1
-    depends_on:
-      game:
-        condition: process_started
-      obs:
-        condition: process_healthy
+      let buttons = (konaste-buddy controller read -d $env.CONTROLLER_DEVICE | from json | where type == "button")
+      if ($buttons | where number == 0).value == 1 {
+        print -e "Aborting because the start button is pressed"
+        exit 1
+      }
+
+      if ($buttons | where value == 1 | length) > 0 {
+        print "Skipping stream start because the controller buttons are pressed"
+        rm -f $env.START_STREAMING_FILE
+      } else {
+        touch $env.START_STREAMING_FILE
+      }
+
+    availability:
+      restart: exit_on_failure
 
   # extension: https://github.com/dj-kata/inf_daken_counter_obsw
   extension:
-    # It's a normal Windows application, so we run it without Proton
-    command: ^wine-stable_10.0-x86_64.AppImage notes_counter.exe
-    working_dir: /home/atty/Applications/inf_daken_counter
-    shutdown:
-      command: killall notes_counter.exe
+    command: ^/var/home/atty/Applications/inf-notebook/.venv/bin/python main.pyw
+    working_dir: /home/atty/Applications/inf-notebook
     depends_on:
       obs:
-        condition: process_healthy
-      obs-ws-proxy:
         condition: process_healthy

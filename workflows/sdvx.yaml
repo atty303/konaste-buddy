@@ -36,6 +36,18 @@ processes:
     availability:
       restart: exit_on_failure
 
+  # OBS WebSocket Proxy for extension
+  obs-ws-proxy:
+    command: "konaste $env.GAME obs-websocket-proxy"
+    availability:
+      restart: on_failure
+    readiness_probe:
+      exec:
+        command: test $(curl -f -s -w "%{http_code}" http://localhost:4456) = '426'
+    depends_on:
+      obs:
+        condition: process_healthy
+
   # extension: https://github.com/dj-kata/sdvx_helper
   extension:
     # It's a normal Windows application, so we run it without Proton
